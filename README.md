@@ -33,3 +33,35 @@ $ make run
 
 After that, you can target the different endpoints exposed by the Wasm
 Workers Server:
+
+```shell-session
+$ curl http://localhost:3000/user-generation-rust
+$ curl http://localhost:3000/user-generation-go
+$ curl http://localhost:3000/user-generation-js
+$ curl http://localhost:3000/user-generation-python
+$ curl http://localhost:3000/user-generation-ruby
+```
+
+This example also showcases how it is possible to make available to
+the WebAssembly guest a file mounted from the Docker host. This
+example can be executed with:
+
+```shell-session
+$ make run-with-mount
+```
+
+You can reach the same endpoints, but you will notice that the
+attribute `.some_file_contents` of the produced JSON in all examples
+now is the content of
+https://github.com/ereslibre/docker-wws-demo/blob/main/tmp/file.txt
+from the host.
+
+The only worker that is not able to read contents from the filesystem
+is the JS one, so you can only check it with the rest:
+
+```shell-session
+$ curl http://localhost:3000/user-generation-rust
+$ curl http://localhost:3000/user-generation-go
+$ curl http://localhost:3000/user-generation-python
+$ curl http://localhost:3000/user-generation-ruby
+```
