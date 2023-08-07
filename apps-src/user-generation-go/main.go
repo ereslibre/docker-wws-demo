@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -57,11 +58,12 @@ func main() {
 		}
 		fileContents := string(fileContents_)
 
-		generatedUserCount := uint32(0)
+		generatedUserCount := uint32(1)
 		if count, ok := cache["generated_users_counter"]; ok {
 			n, _ := strconv.ParseUint(count, 10, 32)
-			generatedUserCount = uint32(n)
+			generatedUserCount = uint32(n) + 1
 		}
+		cache["generated_users_counter"] = fmt.Sprintf("%d", generatedUserCount)
 
 		responseData := ResponseData{
 			User:             user,
