@@ -4,6 +4,7 @@ run: stop build
 	  --name docker-wws \
 	  -d \
 	  -p 3000:3000 \
+	  -v /etc/ssl:/etc/ssl \
 	  --runtime=io.containerd.wws.v1 \
 	  --platform=wasi/wasm \
 	  apps:latest
@@ -20,6 +21,7 @@ run-with-mount: stop build
 	  --name docker-wws \
 	  -d \
 	  -p 3000:3000 \
+	  -v /etc/ssl:/etc/ssl \
 	  -v $(PWD)/tmp:/tmp \
 	  -v $(PWD)/tmp:/user-generation-python/tmp \
 	  -v $(PWD)/tmp:/user-generation-ruby/tmp \
