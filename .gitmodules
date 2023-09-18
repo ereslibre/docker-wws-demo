@@ -1,3 +1,0 @@
-[submodule "wasm-workers-server"]
-	path = wasm-workers-server
-	url = https://github.com/vmware-labs/wasm-workers-server.git

@@ -6,11 +6,18 @@ image:
 dist: clean
 	docker build --platform wasi/wasm --provenance=false --output=dist .
 
-.PHONY: run-local
-run-local: dist
-	cd wasm-workers-server && \
-	nix develop github:ereslibre/nixities#work.wws --command \
-		cargo run -- --enable-panel --host 0.0.0.0 $(PWD)/dist
+.PHONY: image-wws
+image-wws:
+	docker build --target=base --tag=wws-bin:latest .
+
+.PHONY: run-dev
+run-dev: stop image-wws dist
+	docker run --rm -it --name docker-wws \
+	  -p 3000:3000 \
+	  -p 8080:8080 \
+	  -v $(PWD)/dist:/dist \
+	  wws-bin:latest \
+	  wws --enable-panel --host 0.0.0.0 /dist
 
 .PHONY: run
 run: stop image
@@ -33,8 +40,6 @@ run-with-mount: stop image
 	  --runtime=io.containerd.wws.v1 \
 	  --platform=wasi/wasm \
 	  -v $(PWD)/tmp:/tmp \
-	  -v $(PWD)/tmp:/user-generation-python/tmp \
-	  -v $(PWD)/tmp:/user-generation-ruby/tmp \
 	  wws-apps:latest
 	@echo "Now you can reach the Wasm Workers Server functions, such as:"
 	@echo "  - curl http://localhost:3000/user-generation-rust"
