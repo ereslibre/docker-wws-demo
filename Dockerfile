@@ -7,7 +7,7 @@ RUN apk add sudo curl musl-dev ca-certificates && \
 FROM base AS build-rust
 WORKDIR /src
 RUN --mount=type=bind,target=/src,source=./apps-src/user-generation-rust \
-    RUSTFLAGS=-Cstrip=symbols cargo build --release --target wasm32-wasi --target-dir /output
+    cargo build --release --target-dir /output
 
 FROM scratch AS release-rust
 COPY --from=build-rust /output/wasm32-wasi/release/user-generation-rust.wasm /
@@ -25,7 +25,10 @@ COPY ./apps-src/user-generation-python/ /user-generation-python
 FROM --platform=$BUILDPLATFORM tinygo/tinygo:0.28.1 AS build-go
 WORKDIR /src
 RUN --mount=type=bind,target=/src,source=./apps-src/user-generation-go \
-    tinygo build -o /home/tinygo/user-generation-go.wasm -target=wasi .
+    tinygo build \
+        -o /home/tinygo/user-generation-go.wasm \
+        -no-debug -panic=trap -scheduler=none -gc=leaking \
+        -target=wasi .
 
 FROM scratch AS release-go
 COPY --from=build-go /home/tinygo/user-generation-go.wasm /
@@ -40,7 +43,7 @@ COPY ./apps-src/tmp /output/tmp
 FROM scratch AS release-root
 COPY --from=build-root /output /
 
-FROM scratch
+FROM scratch AS release
 COPY --from=release-root / /
 COPY --from=release-rust / /
 COPY --from=release-js / /
@@ -49,4 +52,4 @@ COPY --from=release-python / /
 COPY --from=release-go / /
 COPY --from=base /etc/ssl /etc/ssl
 
-ENTRYPOINT ["."]
+ENTRYPOINT ["/"]
