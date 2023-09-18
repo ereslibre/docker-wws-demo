@@ -3,7 +3,8 @@
 
 ## Introduction
 
-In this article, we will introduce Wasm Workers Server and we will describe how it empowers developers. We will introduce the Docker + Wasm feature that Docker Desktop integrates. You will understand what are the benefits of embracing this new technology, and you will be able to experiment with easy to run, practical examples.
+In this article, we will introduce Wasm Workers Server and we will describe how it empowers developers. We will show you how you can swiftly start using Wasm Workers Server with Docker Desktop. You will understand what are the benefits of embracing this new technology, and you will be able to experiment with a few easy to run, practical examples.
+All code for this article can be found on the [docker-wws-demo repo](https://github.com/ereslibre/docker-wws-demo).
 
 ### Wasm Workers Server
 
@@ -13,7 +14,25 @@ Not only can you develop your application in the language of your choice: Wasm W
 Along with the mentioned workers compatibility and capabilities, Wasm Workers Server also exposes rich platform features to your application such as Dynamic routing and a K/V store, among others.
 
 ### Docker + Wasm
-<TODO></TODO>
+Docker Desktop can run WebAssembly workloads since version 4.21.0, and supports wws since version 4.23.0.
+As this is a beta feature, users need opt-in by enabling the option in the settings.
+In Docker Desktop, open the settings and go to _Features in development_.
+In the _Beta features_ section, check the _Use containerd for pulling and storing images_ option and click _Apply & restart_.
+Once this is done you can check the _Enable Wasm_ option and again click _Apply & restart_.
+This second time a confirmation popup will show, select _Install_.
+And you are done!
+
+![Docker Desktop Settings](docker-desktop-settings.png)
+
+You can now run WebAssembly workflows using Docker:
+```shell-session
+$ docker run --rm \
+  --platform=wasm32/wasi \
+  --runtime=io.containerd.wasmtime.v1 \
+  rumpl/hello-barcelona
+Hola Barcelona!
+My current OS is  wasm32
+```
 
 ## Docker Desktop
 
@@ -25,6 +44,7 @@ This allows Docker Desktop users to seamlessly integrate both containers and Web
 ### WebAssembly runtimes
 
 Docker Desktop packages multiple WebAssembly runtimes that allow different features depending on your needs and priorities. As of today, it features the following WebAssembly runtimes —in alphabetical order—:
+* lunatic
 * spin
 * slight
 * wasm-workers-server
@@ -55,7 +75,7 @@ You can find a detailed description of all the features [in the Wasm Workers ser
 ### Language walkthroughs
 
 In this section, you will write a simple program for each language, so that you can get an idea of how easy it is to write and run your own serverless functions. While simple, this program will also illustrate how to use Wasm Workers Server exposed to your functions.
-This program will perform an HTTP request to a remote server: `https://random-data-api.com/api/v2/users`. This service will provide to us a random user with multiple fields: first name, last name, username, email, password… We will perform a request to this service to generate a new user, but we will filter only to some fields of our interest. This shows how you can do transformations on such data, and then, the program will return the new user along with other information that is gathered from the SDK: it will read a file that is available to the WebAssembly sandbox, and will also increase a counter in a K/V store that outlives the current request.
+This program will perform an HTTP request to a remote server: `https://random-data-api.com/api/v2/users`. This service will provide to us a random user with multiple fields: first name, last name, username, email, password… We will perform a request to this service to generate a new user, but we will filter only to some fields of our interest. This shows how you can do transformations on such data, and then, the program will return the new user along with other information that is gathered from the SDK: it will read a file that is available to the WebAssembly sandbox, and will also increase a counter in a K/V store that outlives the current request. 
 As described in the Wasm Workers Server documentation, the current feature support as of this article, is as follows:
 
 | Language   | K/V Store | Environment Variables | Dynamic Routes | Folders | HTTP Requests |
@@ -70,17 +90,18 @@ You can find the [current up-to-date feature support table here](https://workers
 
 #### Running the examples
 
-If you have at least Docker Desktop version (?? <TODO></TODO>), you can run the examples in this article yourself. We have prepared a container image that you can use to follow along:
+If you have Docker Desktop version 4.23.0 or newer, you can run the examples in this article yourself. We have prepared a container image that you can use to follow along:
 
 ```shell-session
-$ docker run \
+$ docker run -d \
   --name docker-wws \
-  -d \
   -p 3000:3000 \
   --runtime=io.containerd.wws.v1 \
   --platform=wasi/wasm \
   ereslibre/wws-demo:latest # <TODO>: republish at a better place</TODO>
 ```
+
+Then using your browser navigate to http://localhost:3000/user-generation-rust to see it in action.
 
 #### Compiled Languages
 
@@ -163,7 +184,7 @@ $ curl http://localhost:3000/user-generation-rust
 
 ##### Go
 
-Go has great support for WebAssembly + WASI thanks to the TinyGo compiler since its version v0.16.0 (27th Oct 2020). The official Go compiler  supports WebAssembly + WASI since version 1.21, to be released on August 2023.
+Go has great support for WebAssembly + WASI thanks to the TinyGo compiler since its version v0.16.0 (27th Oct 2020). The official Go compiler supports WebAssembly + WASI since version 1.21 (8th August 2023).
 
 ```go
 package main
@@ -285,7 +306,8 @@ $ wws runtimes list
 
 There are available interpreters for ruby and python. Each runtime defines what are the supported file extensions. Wasm Workers Server will use this information to execute your functions with the appropriate interpreter.
 As you might have noticed, no JavaScript runtime is present on the previous listing, because Wasm Workers Server integrates the QuickJS interpreter as of now, so you don’t even need to download a JavaScript runtime specifically to write your functions in JavaScript. They will work out of the box.
-.wws.toml
+
+### Configuration: `.wws.toml`
 The `.wws.toml` configuration on the root of our project specifies Wasm Workers Server configuration common to the whole tree that will be served by wws. In our example, a possible configuration follows:
 
 ```toml
@@ -528,16 +550,16 @@ ENTRYPOINT ["."]
 Building our image with the previous `Dockerfile` boils down to:
 
 ```shell-session
-$ docker buildx build --platform wasi/wasm --provenance false -t wws-apps:latest
+$ docker buildx build --platform wasi/wasm --provenance false -t wws-apps:latest .
 ```
 We can then operate our `wws-apps:latest` image as we would a regular container image. The major difference in terms of the image metadata is the following:
 
 ```shell-session
-$ docker inspect apps:latest | jq '.[].Architecture'
-"wasm"
+$ docker inspect wws-apps:latest -f '{{.Architecture}}'
+wasm
 
-$ docker inspect apps:latest | jq '.[].Os'
-"wasi"
+$ docker inspect wws-apps:latest -f '{{.Os}}'
+wasi
 ```
 
 For the rest, the container image is a regular one. In this case, the scratch image will contain all our functions, although we could have split that in multiple Docker images as well.
