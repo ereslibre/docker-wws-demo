@@ -1,11 +1,17 @@
+# Workaround for https://github.com/moby/buildkit/issues/3891
+export BUILDX_NO_DEFAULT_ATTESTATIONS = 1
+
+# Build a container image for the demo
 .PHONY: image
 image:
-	docker build --platform wasi/wasm --provenance=false --tag=wws-apps:latest .
+	docker build --platform wasi/wasm --tag=wws-apps:latest .
 
+# Export the content of the demo image into the ./dist folder
 .PHONY: dist
 dist: clean
-	docker build --platform wasi/wasm --provenance=false --output=dist .
+	docker build --platform wasi/wasm --output=dist .
 
+# Run the demo container
 .PHONY: run
 run: stop image
 	docker run --rm -d --name docker-wws \
@@ -20,6 +26,7 @@ run: stop image
 	@echo "  - curl http://localhost:3000/user-generation-python"
 	@echo "  - curl http://localhost:3000/user-generation-ruby"
 
+# Run the demo container using a host mount
 .PHONY: run-with-mount
 run-with-mount: stop image
 	docker run --rm -d --name docker-wws \
@@ -35,12 +42,14 @@ run-with-mount: stop image
 	@echo "  - curl http://localhost:3000/user-generation-python"
 	@echo "  - curl http://localhost:3000/user-generation-ruby"
 
-.PHONY: build
-build: dist;
-
+# Stop the demo contianer
 .PHONY: stop
 stop:
 	docker rm -f docker-wws
+
+# Same as dist
+.PHONY: build
+build: dist;
 
 .PHONY: clean
 clean:
