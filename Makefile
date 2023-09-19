@@ -1,50 +1,56 @@
+# Workaround for https://github.com/moby/buildkit/issues/3891
+export BUILDX_NO_DEFAULT_ATTESTATIONS = 1
+
+# Build a container image for the demo
+.PHONY: image
+image:
+	docker build --platform wasi/wasm --tag=wws-apps:latest .
+
+# Export the content of the demo image into the ./dist folder
+.PHONY: dist
+dist: clean
+	docker build --platform wasi/wasm --output=dist .
+
+# Run the demo container
 .PHONY: run
-run: stop build
-	docker run \
-	  --name docker-wws \
-	  -d \
+run: stop image
+	docker run --rm -d --name docker-wws \
 	  -p 3000:3000 \
-	  -v /etc/ssl:/etc/ssl \
 	  --runtime=io.containerd.wws.v1 \
 	  --platform=wasi/wasm \
-	  apps:latest
-	echo "Now you can reach the Wasm Workers Server functions, such as:"
-	echo "  - curl http://localhost:3000/user-generation-rust"
-	echo "  - curl http://localhost:3000/user-generation-go"
-	echo "  - curl http://localhost:3000/user-generation-js"
-	echo "  - curl http://localhost:3000/user-generation-python"
-	echo "  - curl http://localhost:3000/user-generation-ruby"
+	  wws-apps:latest
+	@echo "Now you can reach the Wasm Workers Server functions, such as:"
+	@echo "  - curl http://localhost:3000/user-generation-rust"
+	@echo "  - curl http://localhost:3000/user-generation-go"
+	@echo "  - curl http://localhost:3000/user-generation-js"
+	@echo "  - curl http://localhost:3000/user-generation-python"
+	@echo "  - curl http://localhost:3000/user-generation-ruby"
 
+# Run the demo container using a host mount
 .PHONY: run-with-mount
-run-with-mount: stop build
-	docker run \
-	  --name docker-wws \
-	  -d \
+run-with-mount: stop image
+	docker run --rm -d --name docker-wws \
 	  -p 3000:3000 \
-	  -v /etc/ssl:/etc/ssl \
-	  -v $(PWD)/tmp:/tmp \
-	  -v $(PWD)/tmp:/user-generation-python/tmp \
-	  -v $(PWD)/tmp:/user-generation-ruby/tmp \
 	  --runtime=io.containerd.wws.v1 \
 	  --platform=wasi/wasm \
-	  apps:latest
-	echo "Now you can reach the Wasm Workers Server functions, such as:"
-	echo "  - curl http://localhost:3000/user-generation-rust"
-	echo "  - curl http://localhost:3000/user-generation-go"
-	echo "  - curl http://localhost:3000/user-generation-js"
-	echo "  - curl http://localhost:3000/user-generation-python"
-	echo "  - curl http://localhost:3000/user-generation-ruby"
+	  -v $(PWD)/tmp:/tmp \
+	  wws-apps:latest
+	@echo "Now you can reach the Wasm Workers Server functions, such as:"
+	@echo "  - curl http://localhost:3000/user-generation-rust"
+	@echo "  - curl http://localhost:3000/user-generation-go"
+	@echo "  - curl http://localhost:3000/user-generation-js"
+	@echo "  - curl http://localhost:3000/user-generation-python"
+	@echo "  - curl http://localhost:3000/user-generation-ruby"
 
-.PHONY: build
-build: apps
-	make -C apps all
-	docker buildx build --platform wasi/wasm --provenance false -t apps:latest .
-
-
+# Stop the demo contianer
 .PHONY: stop
 stop:
 	docker rm -f docker-wws
 
+# Same as dist
+.PHONY: build
+build: dist;
+
 .PHONY: clean
 clean:
-	make -C apps clean
+	rm -Rf ./dist
