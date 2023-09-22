@@ -1,10 +1,14 @@
 # Running Wasm Workers Server in Docker Desktop
 
-
 ## Introduction
 
 In this article, we will introduce Wasm Workers Server and we will describe how it empowers developers. We will show you how you can swiftly start using Wasm Workers Server with Docker Desktop. You will understand what are the benefits of embracing this new technology, and you will be able to experiment with a few easy to run, practical examples.
-All code for this article can be found on the [docker-wws-demo repo](https://github.com/ereslibre/docker-wws-demo).
+
+{% alertInfo %}
+  <div>
+    ℹ️ All code for this article can be found on the <a href="https://github.com/ereslibre/docker-wws-demo" target=_blank>docker-wws-demo repo</a>.
+  </div>
+{% endalertInfo %}
 
 ### Wasm Workers Server
 
@@ -14,6 +18,7 @@ Not only can you develop your application in the language of your choice: Wasm W
 Along with the mentioned workers compatibility and capabilities, Wasm Workers Server also exposes rich platform features to your application such as Dynamic routing and a K/V store, among others.
 
 ### Docker + Wasm
+
 Docker Desktop can run WebAssembly workloads since version 4.21.0, and supports wws since version 4.23.0.
 As this is a beta feature, users need opt-in by enabling the option in the settings.
 In Docker Desktop, open the settings and go to _Features in development_.
@@ -22,7 +27,7 @@ Once this is done you can check the _Enable Wasm_ option and again click _Apply 
 This second time a confirmation popup will show, select _Install_.
 And you are done!
 
-![Docker Desktop Settings](docker-desktop-settings.png)
+{% image "A Docker Desktop screenshot showing the Settings dialog", "docker-desktop-settings.png" %}
 
 You can now run WebAssembly workflows using Docker:
 ```shell-session
@@ -68,6 +73,7 @@ Wasm Workers Server [supports multiple languages](https://workers.wasmlabs.dev/d
 - [Python](https://workers.wasmlabs.dev/docs/languages/python)
 - [Ruby](https://workers.wasmlabs.dev/docs/languages/ruby)
 - [Rust](https://workers.wasmlabs.dev/docs/languages/rust)
+- [Zig](https://workers.wasmlabs.dev/docs/languages/zig)
 
 You can mix and match your functions in the language of your choice. We have provided a Software Development Kit (SDK) for each one of them, so that you only have to focus on writing your serverless logic. These SDK's are idiomatic for the language they are targeting, and they allow you to take advantage of advanced Wasm Workers Server features, such as K/V stores and performing HTTP requests to the outer world of the WebAssembly sandbox in a capability-based model.
 You can find a detailed description of all the features [in the Wasm Workers server documentation](https://workers.wasmlabs.dev/docs/features/all).
@@ -75,7 +81,7 @@ You can find a detailed description of all the features [in the Wasm Workers ser
 ### Language walkthroughs
 
 In this section, you will write a simple program for each language, so that you can get an idea of how easy it is to write and run your own serverless functions. While simple, this program will also illustrate how to use Wasm Workers Server exposed to your functions.
-This program will perform an HTTP request to a remote server: `https://random-data-api.com/api/v2/users`. This service will provide to us a random user with multiple fields: first name, last name, username, email, password… We will perform a request to this service to generate a new user, but we will filter only to some fields of our interest. This shows how you can do transformations on such data, and then, the program will return the new user along with other information that is gathered from the SDK: it will read a file that is available to the WebAssembly sandbox, and will also increase a counter in a K/V store that outlives the current request. 
+This program will perform an HTTP request to a remote server: `https://random-data-api.com/api/v2/users`. This service will provide to us a random user with multiple fields: first name, last name, username, email, password… We will perform a request to this service to generate a new user, but we will filter only to some fields of our interest. This shows how you can do transformations on such data, and then, the program will return the new user along with other information that is gathered from the SDK: it will read a file that is available to the WebAssembly sandbox, and will also increase a counter in a K/V store that outlives the current request.
 As described in the Wasm Workers Server documentation, the current feature support as of this article, is as follows:
 
 | Language   | K/V Store | Environment Variables | Dynamic Routes | Folders | HTTP Requests |
@@ -85,6 +91,7 @@ As described in the Wasm Workers Server documentation, the current feature suppo
 | Python     | ✅        | ✅                    | ✅             | ✅      | ❌            |
 | Ruby       | ✅        | ✅                    | ✅             | ✅      | ❌            |
 | Rust       | ✅        | ✅                    | ✅             | ✅      | ✅            |
+| Zig        | ✅        | ✅                    | ✅             | ✅      | ❌            |
 
 You can find the [current up-to-date feature support table here](https://workers.wasmlabs.dev/docs/features/all#language-compatibility).
 
@@ -541,7 +548,7 @@ $ curl http://localhost:3000/user-generation-ruby
 
 One of the greatest things about the Docker + Wasm integration is that from the developer point of view things are very familiar. Creating the image that contains all the examples that you have executed is as simple as:
 
-```Dockerfile
+```dockerfile
 FROM scratch
 COPY ./apps/root .
 ENTRYPOINT ["."]
@@ -555,10 +562,10 @@ $ docker buildx build --platform wasi/wasm --provenance false -t wws-apps:latest
 We can then operate our `wws-apps:latest` image as we would a regular container image. The major difference in terms of the image metadata is the following:
 
 ```shell-session
-$ docker inspect wws-apps:latest -f '{{.Architecture}}'
+$ docker inspect wws-apps:latest -f {% raw %}'{{.Architecture}}'{% endraw %}
 wasm
 
-$ docker inspect wws-apps:latest -f '{{.Os}}'
+$ docker inspect wws-apps:latest -f {% raw %}'{{.Os}}'{% endraw %}
 wasi
 ```
 
@@ -578,4 +585,8 @@ And that you also instruct Docker Desktop to run your module with volume mountin
 
 ## Conclusion
 
-<TODO>
+In this article we have introduced Wasm Workers Server, and the Docker + Wasm integration. We have also described what are the integrations with the different WebAssembly runtimes that Docker support. Afterwards, we have gone through some examples in different languages that showcase how easy it is to build and run these programs in Docker Desktop. You can run and build all these examples to see and experiment by yourself.
+
+Docker has revolutionized the way developers work, collaborate and publish their projects. It pioneered an unmatched user experience (UX) that allowed developers to reduce their infrastructure drift and specialties across teams and communities. It also enabled operations to deploy applications in the same way that developers built and tested them. Last, but not least, Docker introduced a user friendly way of sharing this work with other people.
+
+Now, thanks to the Docker integration with WebAssembly, this very same user experience and sharing capabilities is enabled in the WebAssembly world.
