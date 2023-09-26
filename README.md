@@ -1,3 +1,9 @@
+# Repo moved
+
+This repo has moved. Examples have been added to wws directly:
+
+- [Pull request](https://github.com/vmware-labs/wasm-workers-server/pull/222)
+
 # Docker + Wasm + Wasm Workers Server (wws)
 
 This repo showcases some functions you can write, taking advantage of
